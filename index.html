@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按摩工作室預約管理</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap">
+    <style>
+        /* 基礎樣式 */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+            -webkit-text-size-adjust: 100%;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #CA8E82; /* 主要標題文字顏色 */
+            border-bottom: 2px solid #E3B4A2; /* 標題底線顏色 */
+            padding-bottom: 10px;
+            margin-top: 25px;
+            font-weight: 700;
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .tab-button {
+            flex-grow: 1;
+            padding: 15px 0;
+            border: none;
+            background-color: #F5DDCB; /* Tab 未選取背景色 */
+            cursor: pointer;
+            font-size: 16px;
+            color: #A7715B; /* Tab 未選取文字顏色 */
+            transition: background-color 0.3s, color 0.3s;
+            border-radius: 12px 12px 0 0;
+            font-weight: 500;
+            text-align: center;
+        }
+        .tab-button.active {
+            background-color: #CA8E82; /* Tab 選取背景色 */
+            color: #fff; /* Tab 選取文字顏色 */
+            pointer-events: none;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #E3B4A2; /* Tab Hover 背景色 */
+            color: #A7715B; /* Tab Hover 文字顏色 */
+        }
+        .tab-content {
+            display: none;
+            padding-top: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 表單樣式 */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #A7715B; /* 表單 Label 文字顏色 */
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #E3B4A2; /* 表單元素邊框顏色 */
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #F8E6DE; /* 表單元素背景色 */
+            color: #333;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #CA8E82; /* 表單元素 Focus 邊框顏色 */
+            box-shadow: 0 0 0 2px rgba(202, 142, 130, 0.2); /* 表單元素 Focus Box Shadow 顏色 */
+        }
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: #CA8E82; /* 主要按鈕背景色 */
+            color: #fff; /* 主要按鈕文字顏色 */
+            transition: background-color 0.3s;
+        }
+        .btn.full-width {
+            width: 100%;
+        }
+        .btn:hover {
+            background-color: #B87A6E; /* 主要按鈕 Hover 背景色 */
+        }
+        .btn:disabled {
+            background-color: #E3B4A2; /* Disabled 按鈕背景色 */
+            color: #CA8E82; /* Disabled 按鈕文字顏色 */
+            cursor: not-allowed;
+        }
+        
+        /* 顧客清單與預約清單樣式 */
+        #customer-list-container, #upcoming-appointments-list {
+            list-style: none;
+            padding: 0;
+        }
+        .customer-item, .appointment-item {
+            background-color: #F5DDCB; /* 清單項目背景色 */
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            transition: background-color 0.3s;
+        }
+        .customer-item:not(.is-expanded) {
+            cursor: pointer;
+        }
+        .customer-item:not(.is-expanded):hover {
+            background-color: #E3B4A2; /* 清單項目 Hover 背景色 */
+        }
+        .customer-item-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .customer-item-info {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+        .customer-item-info strong {
+            font-size: 1.25rem;
+            margin-right: 15px;
+            color: #A7715B; /* 清單項目 Strong 文字顏色 */
+        }
+        .customer-item-tags {
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 12px;
+            color: #fff;
+            margin-left: 5px;
+            white-space: nowrap;
+        }
+        .tag.new-customer {
+            background-color: #f44336;
+        }
+        .tag.old-customer {
+            background-color: #4caf50;
+        }
+        .tag.birthday {
+            background-color: #ff9800;
+        }
+        .details {
+            margin-top: 15px;
+            background-color: #F8E6DE; /* Details 背景色 */
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+            display: none;
+            color: #7A4A3B; /* Details 文字顏色 */
+        }
+        .is-expanded .details {
+            display: block;
+        }
+        .details h4 {
+            margin: 0 0 10px 0;
+            color: #CA8E82; /* Details H4 顏色 */
+            font-size: 1rem;
+            border-bottom: 1px solid #E3B4A2; /* Details H4 底線顏色 */
+            padding-bottom: 5px;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .details ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .details li {
+            margin-bottom: 5px;
+        }
+        .details-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .details-actions .btn {
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+        .details-actions .delete-btn {
+            background-color: #f44336;
+        }
+        .details-actions .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .search-filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-filter-controls input, .search-filter-controls select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #E3B4A2; /* Search Filter 邊框顏色 */
+            border-radius: 8px;
+            background-color: #F8E6DE; /* Search Filter 背景色 */
+            color: #333;
+        }
+        .search-filter-controls input:focus, .search-filter-controls select:focus {
+            outline: none;
+            border-color: #CA8E82; /* Search Filter Focus 邊框顏色 */
+            box-shadow: 0 0 0 2px rgba(202, 142, 130, 0.2); /* Search Filter Focus Box Shadow 顏色 */
+        }
+        
+        /* 無障礙輔助 */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* 姓名自動完成建議列表 */
+        .autocomplete-list {
+            position: absolute;
+            z-index: 1000;
+            background-color: #fff;
+            border: 1px solid #E3B4A2; /* Autocomplete 邊框顏色 */
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: none;
+        }
+        .autocomplete-list-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #F5DDCB; /* Autocomplete Item 底線顏色 */
+            color: #A7715B; /* Autocomplete Item 文字顏色 */
+        }
+        .autocomplete-list-item:hover, .autocomplete-list-item.selected {
+            background-color: #E3B4A2; /* Autocomplete Item Hover 背景色 */
+        }
+        
+        /* 彈出視窗 (Modal) */
+        .modal {
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.is-active {
+            display: flex;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #CA8E82; /* Modal 標題顏色 */
+            border-bottom: 1px solid #E3B4A2; /* Modal 標題底線顏色 */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .modal-buttons .btn {
+            padding: 12px 25px;
+            width: auto;
+            border-radius: 8px;
+        }
+        .modal-buttons .cancel-btn {
+            background-color: #D8AD95; /* Modal Cancel 按鈕背景色 */
+        }
+        .modal-buttons .cancel-btn:hover {
+            background-color: #CA8E82; /* Modal Cancel 按鈕 Hover 背景色 */
+        }
+        .appointment-item .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .appointment-item .item-actions .btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            font-weight: normal;
+            background-color: #CA8E82; /* 預約項目操作按鈕背景色 */
+            color: #fff; /* 預約項目操作按鈕文字顏色 */
+        }
+        .appointment-item .item-actions .btn:hover {
+            background-color: #B87A6E; /* 預約項目操作按鈕 Hover 背景色 */
+        }
+        .appointment-item .item-actions .delete-btn {
+            background-color: #f44336;
+        }
+        .appointment-item .item-actions .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .appointment-info {
+            flex-grow: 1;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1 aria-live="polite">按摩工作室預約管理系統</h1>
+
+    <div class="tabs" role="tablist">
+        <button class="tab-button active" data-tab="add-appointment" role="tab" aria-controls="tab-add-appointment" aria-selected="true">新增預約</button>
+        <button class="tab-button" data-tab="manage-customers" role="tab" aria-controls="tab-manage-customers" aria-selected="false">顧客管理</button>
+        <button class="tab-button" data-tab="upcoming-appointments" role="tab" aria-controls="tab-upcoming-appointments" aria-selected="false">即將到來的預約</button>
+    </div>
+
+    <div id="tab-add-appointment" class="tab-content active" role="tabpanel" aria-labelledby="add-appointment-tab">
+        <form id="add-appointment-form">
+            <h2>新增顧客與預約</h2>
+            <div class="form-group">
+                <label for="customer-name">客人姓名 <span class="visually-hidden">輸入名字會出現自動完成建議</span></label>
+                <input type="text" id="customer-name" placeholder="請輸入客人姓名" required aria-required="true" autocomplete="off">
+                <ul id="autocomplete-list" class="autocomplete-list" role="listbox"></ul>
+            </div>
+            <div class="form-group">
+                <label for="customer-phone">客人電話</label>
+                <input type="tel" id="customer-phone" placeholder="請輸入客人電話" aria-required="false">
+            </div>
+            <div class="form-group">
+                <label for="customer-birthday">生日月份</label>
+                <select id="customer-birthday" aria-required="false">
+                    <option value="">選擇月份</option>
+                    <option value="1">1月</option>
+                    <option value="2">2月</option>
+                    <option value="3">3月</option>
+                    <option value="4">4月</option>
+                    <option value="5">5月</option>
+                    <option value="6">6月</option>
+                    <option value="7">7月</option>
+                    <option value="8">8月</option>
+                    <option value="9">9月</option>
+                    <option value="10">10月</option>
+                    <option value="11">11月</option>
+                    <option value="12">12月</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="appointment-date">預約日期</label>
+                <input type="date" id="appointment-date" required aria-required="true">
+            </div>
+            <div class="form-group">
+                <label for="appointment-time">預約時間</label>
+                <select id="appointment-time" required aria-required="true">
+                    <option value="">選擇時間</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="appointment-duration">預約長度</label>
+                <select id="appointment-duration" required aria-required="true">
+                    <option value="">選擇長度</option>
+                    <option value="30">30分鐘</option>
+                    <option value="60">60分鐘</option>
+                    <option value="90">90分鐘</option>
+                    <option value="120">120分鐘</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="appointment-notes">備註</label>
+                <textarea id="appointment-notes" placeholder="例如：特別需求、身體狀況等" rows="3" aria-required="false"></textarea>
+            </div>
+            <button type="submit" class="btn full-width">儲存預約</button>
+        </form>
+    </div>
+
+    <div id="tab-manage-customers" class="tab-content" role="tabpanel" aria-labelledby="manage-customers-tab">
+        <h2>顧客資料管理</h2>
+        <div class="search-filter-controls">
+            <input type="text" id="customer-search" placeholder="依姓名搜尋顧客" aria-label="依姓名搜尋顧客">
+            <select id="customer-birthday-filter" aria-label="篩選生日月份">
+                <option value="">所有壽星月份</option>
+                <option value="1">1月</option>
+                <option value="2">2月</option>
+                <option value="3">3月</option>
+                <option value="4">4月</option>
+                <option value="5">5月</option>
+                <option value="6">6月</option>
+                <option value="7">7月</option>
+                <option value="8">8月</option>
+                <option value="9">9月</option>
+                <option value="10">10月</option>
+                <option value="11">11月</option>
+                <option value="12">12月</option>
+            </select>
+            <select id="customer-type-filter" aria-label="篩選新舊客">
+                <option value="">所有顧客</option>
+                <option value="new">新客</option>
+                <option value="old">舊客</option>
+            </select>
+        </div>
+        <ul id="customer-list-container" aria-live="polite"></ul>
+    </div>
+
+    <div id="tab-upcoming-appointments" class="tab-content" role="tabpanel" aria-labelledby="upcoming-appointments-tab">
+        <h2>即將到來的預約</h2>
+        <ul id="upcoming-appointments-list" aria-live="polite"></ul>
+    </div>
+</div>
+
+<div id="editCustomerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+        <h3 id="modal-title">修改顧客資料</h3>
+        <form id="edit-customer-form">
+            <input type="hidden" id="edit-customer-id">
+            <div class="form-group">
+                <label for="edit-customer-name">客人姓名</label>
+                <input type="text" id="edit-customer-name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-customer-phone">客人電話</label>
+                <input type="tel" id="edit-customer-phone">
+            </div>
+            <div class="form-group">
+                <label for="edit-customer-birthday">生日月份</label>
+                <select id="edit-customer-birthday">
+                    <option value="">選擇月份</option>
+                    <option value="1">1月</option>
+                    <option value="2">2月</option>
+                    <option value="3">3月</option>
+                    <option value="4">4月</option>
+                    <option value="5">5月</option>
+                    <option value="6">6月</option>
+                    <option value="7">7月</option>
+                    <option value="8">8月</option>
+                    <option value="9">9月</option>
+                    <option value="10">10月</option>
+                    <option value="11">11月</option>
+                    <option value="12">12月</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn cancel-btn" id="close-edit-customer-modal">取消</button>
+                <button type="submit" class="btn">儲存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="editAppointmentModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-appointment-modal-title">
+    <div class="modal-content">
+        <h3 id="edit-appointment-modal-title">修改預約</h3>
+        <form id="edit-appointment-form">
+            <input type="hidden" id="edit-appointment-id">
+            <div class="form-group">
+                <label for="edit-appointment-date">預約日期</label>
+                <input type="date" id="edit-appointment-date" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-appointment-time">預約時間</label>
+                <select id="edit-appointment-time" required>
+                    <option value="">選擇時間</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-appointment-duration">預約長度</label>
+                <select id="edit-appointment-duration" required>
+                    <option value="">選擇長度</option>
+                    <option value="30">30分鐘</option>
+                    <option value="60">60分鐘</option>
+                    <option value="90">90分鐘</option>
+                    <option value="120">120分鐘</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn cancel-btn" id="close-edit-appointment-modal">取消</button>
+                <button type="submit" class="btn">儲存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    // 請將您的 Firebase 設定貼到這裡
+    const firebaseConfig = {
+        apiKey: "AIzaSyCArEwTLBkwcH0QpAxN2SQuF2A5RwqLt40",
+        authDomain: "vibecoding-muho.firebaseapp.com",
+        projectId: "vibecoding-muho",
+        storageBucket: "vibecoding-muho.firebasestorage.app",
+        messagingSenderId: "443933109438",
+        appId: "1:443933109438:web:ef3268ea9408ebf17082ef",
+        measurementId: "G-5V63HWY7E0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 取得所有 DOM 元素
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const addAppointmentForm = document.getElementById('add-appointment-form');
+    const customerNameInput = document.getElementById('customer-name');
+    const customerPhoneInput = document.getElementById('customer-phone');
+    const customerBirthdaySelect = document.getElementById('customer-birthday');
+    const appointmentDateInput = document.getElementById('appointment-date');
+    const appointmentTimeSelect = document.getElementById('appointment-time');
+    const appointmentDurationSelect = document.getElementById('appointment-duration');
+    const appointmentNotesInput = document.getElementById('appointment-notes');
+    const customerListContainer = document.getElementById('customer-list-container');
+    const customerSearchInput = document.getElementById('customer-search');
+    const customerBirthdayFilter = document.getElementById('customer-birthday-filter');
+    const customerTypeFilter = document.getElementById('customer-type-filter');
+    const upcomingAppointmentsList = document.getElementById('upcoming-appointments-list');
+    const autocompleteList = document.getElementById('autocomplete-list');
+
+    // 修改顧客資料的 Modal 相關元素
+    const editCustomerModal = document.getElementById('editCustomerModal');
+    const editCustomerForm = document.getElementById('edit-customer-form');
+    const editCustomerIdInput = document.getElementById('edit-customer-id');
+    const editCustomerNameInput = document.getElementById('edit-customer-name');
+    const editCustomerPhoneInput = document.getElementById('edit-customer-phone');
+    const editCustomerBirthdaySelect = document.getElementById('edit-customer-birthday');
+    const closeEditCustomerModalBtn = document.getElementById('close-edit-customer-modal');
+    
+    // 修改預約資料的 Modal 相關元素
+    const editAppointmentModal = document.getElementById('editAppointmentModal');
+    const editAppointmentForm = document.getElementById('edit-appointment-form');
+    const editAppointmentIdInput = document.getElementById('edit-appointment-id');
+    const editAppointmentDateInput = document.getElementById('edit-appointment-date');
+    const editAppointmentTimeSelect = document.getElementById('edit-appointment-time');
+    const editAppointmentDurationSelect = document.getElementById('edit-appointment-duration');
+    const closeEditAppointmentModalBtn = document.getElementById('close-edit-appointment-modal');
+
+
+    // 產生預約時間選項
+    function populateTimeOptions(selectElement) {
+        selectElement.innerHTML = '<option value="">選擇時間</option>';
+        for (let h = 9; h <= 22; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                const hour = String(h).padStart(2, '0');
+                const minute = String(m).padStart(2, '0');
+                const time = `${hour}:${minute}`;
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                selectElement.appendChild(option);
+            }
+        }
+    }
+
+    // 載入顧客資料並儲存以供自動完成使用
+    let allCustomers = [];
+    async function fetchAllCustomers() {
+        const snapshot = await db.collection('customers').get();
+        allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    // 處理姓名自動完成功能
+    customerNameInput.addEventListener('input', () => {
+        const inputVal = customerNameInput.value.trim().toLowerCase();
+        autocompleteList.innerHTML = '';
+        autocompleteList.style.display = 'none';
+
+        if (inputVal.length > 0) {
+            const matches = allCustomers.filter(customer =>
+                customer.name.toLowerCase().includes(inputVal)
+            );
+
+            if (matches.length > 0) {
+                matches.forEach(customer => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'autocomplete-list-item';
+                    listItem.textContent = customer.name;
+                    listItem.setAttribute('role', 'option');
+                    listItem.setAttribute('tabindex', '0');
+                    listItem.addEventListener('click', () => {
+                        customerNameInput.value = customer.name;
+                        customerPhoneInput.value = customer.phone || '';
+                        customerBirthdaySelect.value = customer.birthday || '';
+                        autocompleteList.style.display = 'none';
+                    });
+                    autocompleteList.appendChild(listItem);
+                });
+                autocompleteList.style.display = 'block';
+            }
+        }
+    });
+
+    // 點擊表單以外區域隱藏自動完成列表
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.form-group')) {
+            autocompleteList.style.display = 'none';
+        }
+    });
+
+    // 切換標籤頁功能
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.getAttribute('data-tab');
+
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${targetTab}`).classList.add('active');
+
+            if (targetTab === 'manage-customers') {
+                loadCustomers();
+            } else if (targetTab === 'upcoming-appointments') {
+                loadUpcomingAppointments();
+            }
+        });
+    });
+
+    // 表單送出事件：新增或更新預約
+    addAppointmentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = customerNameInput.value.trim();
+        const phone = customerPhoneInput.value.trim();
+        const birthday = customerBirthdaySelect.value;
+        const date = appointmentDateInput.value;
+        const time = appointmentTimeSelect.value;
+        const duration = appointmentDurationSelect.value;
+        const notes = appointmentNotesInput.value.trim();
+
+        if (!name || !date || !time || !duration) {
+            alert('姓名、預約日期、預約時間和預約長度為必填！');
+            return;
+        }
+
+        try {
+            const customerRef = db.collection('customers');
+            const snapshot = await customerRef.where('name', '==', name).get();
+            let customerId;
+
+            if (snapshot.empty) {
+                const newCustomerRef = await customerRef.add({
+                    name,
+                    phone: phone || '',
+                    birthday: birthday || '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                customerId = newCustomerRef.id;
+            } else {
+                const doc = snapshot.docs[0];
+                customerId = doc.id;
+                await doc.ref.update({
+                    phone: phone || doc.data().phone || '',
+                    birthday: birthday || doc.data().birthday || ''
+                });
+            }
+
+            const appointmentsRef = db.collection('appointments');
+            await appointmentsRef.add({
+                customerId,
+                customerName: name,
+                date,
+                time,
+                duration: parseInt(duration),
+                notes,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert('預約成功新增！');
+            addAppointmentForm.reset();
+            customerNameInput.focus();
+            loadUpcomingAppointments();
+            fetchAllCustomers();
+        } catch (error) {
+            console.error("儲存預約時發生錯誤: ", error);
+            alert("儲存預約失敗，請檢查網路連線或重新整理。");
+        }
+    });
+
+    // 載入顧客列表
+    async function loadCustomers() {
+        customerListContainer.innerHTML = '<li>載入中...</li>';
+        const searchTerm = customerSearchInput.value.trim().toLowerCase();
+        const birthdayFilter = customerBirthdayFilter.value;
+        const typeFilter = customerTypeFilter.value;
+
+        let customersRef = db.collection('customers');
+        let appointmentsRef = db.collection('appointments');
+
+        try {
+            const customersSnapshot = await customersRef.get();
+            const allAppointmentsSnapshot = await appointmentsRef.get();
+            const allAppointments = allAppointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            let filteredCustomers = customersSnapshot.docs.filter(doc => {
+                const customerData = doc.data();
+                const matchesSearch = searchTerm === '' || customerData.name.toLowerCase().includes(searchTerm);
+                const matchesBirthday = birthdayFilter === '' || customerData.birthday === birthdayFilter;
+                const customerAppointments = allAppointments.filter(app => app.customerId === doc.id);
+                const isOldCustomer = customerAppointments.length > 1;
+                const matchesType = typeFilter === '' || (typeFilter === 'new' && !isOldCustomer) || (typeFilter === 'old' && isOldCustomer);
+
+                return matchesSearch && matchesBirthday && matchesType;
+            });
+
+            customerListContainer.innerHTML = '';
+            if (filteredCustomers.length === 0) {
+                customerListContainer.innerHTML = '<li aria-live="polite">沒有符合條件的顧客。</li>';
+                return;
+            }
+
+            for (const doc of filteredCustomers) {
+                const customerData = doc.data();
+                const customerId = doc.id;
+                
+                const customerAppointments = allAppointments.filter(app => app.customerId === customerId).sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+
+                const appointmentCount = customerAppointments.length;
+                const isNewCustomer = appointmentCount <= 1;
+
+                const listItem = document.createElement('li');
+                listItem.className = 'customer-item';
+                listItem.setAttribute('data-customer-id', customerId);
+                listItem.setAttribute('tabindex', '0');
+                listItem.setAttribute('aria-expanded', 'false');
+                listItem.setAttribute('aria-controls', `details-${customerId}`);
+                listItem.innerHTML = `
+                    <div class="customer-item-header">
+                        <div class="customer-item-info">
+                            <strong>${customerData.name}</strong>
+                            <div class="customer-item-tags">
+                                ${isNewCustomer ? '<span class="tag new-customer">新客</span>' : '<span class="tag old-customer">舊客</span>'}
+                                ${customerData.birthday ? `<span class="tag birthday">${customerData.birthday}月壽星</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="details-${customerId}" class="details" role="region">
+                        <h4>詳細資料</h4>
+                        <p>電話: ${customerData.phone || '無'}</p>
+                        <p>生日月份: ${customerData.birthday ? `${customerData.birthday}月` : '無'}</p>
+                        <h4>過去預約紀錄 (${appointmentCount} 次)</h4>
+                        <ul>
+                            ${customerAppointments.length > 0 ? customerAppointments.map(app => `<li>${app.date} ${app.time} - ${app.duration}分鐘 - 備註: ${app.notes || '無'}</li>`).join('') : '<li>無預約紀錄</li>'}
+                        </ul>
+                        <div class="details-actions">
+                            <button type="button" class="btn edit-btn" data-customer-id="${customerId}">修改</button>
+                            <button type="button" class="btn delete-btn" data-customer-id="${customerId}">刪除</button>
+                        </div>
+                    </div>
+                `;
+                customerListContainer.appendChild(listItem);
+
+                const detailsContainer = listItem.querySelector(`#details-${customerId}`);
+                const header = listItem.querySelector('.customer-item-header');
+
+                header.addEventListener('click', () => {
+                    const isExpanded = listItem.classList.toggle('is-expanded');
+                    listItem.setAttribute('aria-expanded', isExpanded);
+                });
+            }
+        } catch (error) {
+            console.error("載入顧客資料時發生錯誤: ", error);
+            customerListContainer.innerHTML = '<li>載入失敗，請檢查網路連線。</li>';
+        }
+    }
+
+    // 處理修改按鈕點擊事件
+    customerListContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-btn')) {
+            const customerId = e.target.getAttribute('data-customer-id');
+            const customer = allCustomers.find(c => c.id === customerId);
+            if (customer) {
+                editCustomerIdInput.value = customerId;
+                editCustomerNameInput.value = customer.name;
+                editCustomerPhoneInput.value = customer.phone || '';
+                editCustomerBirthdaySelect.value = customer.birthday || '';
+                editCustomerModal.classList.add('is-active');
+                editCustomerNameInput.focus();
+            }
+        } else if (e.target.classList.contains('delete-btn')) {
+            const customerId = e.target.getAttribute('data-customer-id');
+            if (confirm('確定要刪除這位顧客嗎？所有相關的預約紀錄也將一併刪除，此動作無法復原！')) {
+                deleteCustomerAndAppointments(customerId);
+            }
+        }
+    });
+
+    // 儲存修改後的顧客資料
+    editCustomerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const customerId = editCustomerIdInput.value;
+        const newName = editCustomerNameInput.value.trim();
+        const newPhone = editCustomerPhoneInput.value.trim();
+        const newBirthday = editCustomerBirthdaySelect.value;
+
+        if (!newName) {
+            alert('顧客姓名不能為空！');
+            return;
+        }
+
+        try {
+            await db.collection('customers').doc(customerId).update({
+                name: newName,
+                phone: newPhone,
+                birthday: newBirthday
+            });
+
+            const oldName = allCustomers.find(c => c.id === customerId)?.name;
+            if (oldName !== newName) {
+                const appointmentsToUpdate = await db.collection('appointments').where('customerId', '==', customerId).get();
+                const batch = db.batch();
+                appointmentsToUpdate.docs.forEach(doc => {
+                    batch.update(doc.ref, { customerName: newName });
+                });
+                await batch.commit();
+            }
+
+            alert('顧客資料更新成功！');
+            editCustomerModal.classList.remove('is-active');
+            loadCustomers();
+            fetchAllCustomers();
+            loadUpcomingAppointments();
+        } catch (error) {
+            console.error("更新顧客資料時發生錯誤: ", error);
+            alert("更新顧客資料失敗，請檢查網路連線或重新整理。");
+        }
+    });
+
+    // 刪除顧客及所有預約紀錄
+    async function deleteCustomerAndAppointments(customerId) {
+        try {
+            const appointmentsToDelete = await db.collection('appointments').where('customerId', '==', customerId).get();
+            const batch = db.batch();
+            appointmentsToDelete.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            await db.collection('customers').doc(customerId).delete();
+
+            alert('顧客及所有預約紀錄已刪除！');
+            loadCustomers();
+            fetchAllCustomers();
+            loadUpcomingAppointments();
+        } catch (error) {
+            console.error("刪除顧客時發生錯誤: ", error);
+            alert("刪除失敗，請檢查網路連線或重新整理。");
+        }
+    }
+
+    // 關閉修改顧客彈出視窗
+    closeEditCustomerModalBtn.addEventListener('click', () => {
+        editCustomerModal.classList.remove('is-active');
+    });
+
+    // 載入即將到來的預約（已還原過濾邏輯）
+    async function loadUpcomingAppointments() {
+        upcomingAppointmentsList.innerHTML = '<li>載入中...</li>';
+
+        try {
+            const snapshot = await db.collection('appointments')
+                .orderBy('date', 'asc')
+                .orderBy('time', 'asc')
+                .get();
+                
+            upcomingAppointmentsList.innerHTML = '';
+            
+            if (snapshot.empty) {
+                upcomingAppointmentsList.innerHTML = '<li>目前沒有任何即將到來的預約。</li>';
+                return;
+            }
+
+            // 新增：過濾掉過期預約的邏輯
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            const upcomingAppointments = snapshot.docs.filter(doc => {
+                const app = doc.data();
+                return app.date > today || (app.date === today && app.time >= currentTime);
+            });
+
+            if (upcomingAppointments.length === 0) {
+                upcomingAppointmentsList.innerHTML = '<li>目前沒有任何即將到來的預約。</li>';
+                return;
+            }
+
+            // 遍歷預約，為每個項目新增編輯和刪除按鈕
+            upcomingAppointments.forEach(doc => {
+                const app = doc.data();
+                const appointmentId = doc.id;
+                const listItem = document.createElement('li');
+                listItem.className = 'appointment-item';
+                listItem.innerHTML = `
+                    <div class="appointment-info">
+                        <strong>${app.date} ${app.time}</strong> - ${app.customerName}<br>
+                        <span>${app.duration}分鐘 - 備註: ${app.notes || '無'}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="btn" data-action="edit-appointment" data-id="${appointmentId}">編輯</button>
+                        <button type="button" class="btn delete-btn" data-action="delete-appointment" data-id="${appointmentId}">刪除</button>
+                    </div>
+                `;
+                upcomingAppointmentsList.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error("載入預約時發生錯誤: ", error);
+            upcomingAppointmentsList.innerHTML = '<li>載入失敗，請檢查網路連線或重新整理。</li>';
+        }
+    }
+
+    // 預約清單的事件委託
+    upcomingAppointmentsList.addEventListener('click', (e) => {
+        const target = e.target;
+        const action = target.getAttribute('data-action');
+        const id = target.getAttribute('data-id');
+        
+        if (action === 'edit-appointment') {
+            openEditAppointmentModal(id);
+        } else if (action === 'delete-appointment') {
+            if (confirm('確定要刪除這筆預約嗎？')) {
+                deleteAppointment(id);
+            }
+        }
+    });
+
+    // 開啟修改預約的彈出視窗並載入資料
+    async function openEditAppointmentModal(appointmentId) {
+        try {
+            const doc = await db.collection('appointments').doc(appointmentId).get();
+            if (doc.exists) {
+                const app = doc.data();
+                editAppointmentIdInput.value = appointmentId;
+                editAppointmentDateInput.value = app.date;
+                populateTimeOptions(editAppointmentTimeSelect);
+                editAppointmentTimeSelect.value = app.time;
+                editAppointmentDurationSelect.value = app.duration;
+                editAppointmentModal.classList.add('is-active');
+            }
+        } catch (error) {
+            console.error("載入預約資料時發生錯誤: ", error);
+            alert("載入預約資料失敗，請檢查網路連線。");
+        }
+    }
+
+    // 儲存修改後的預約資料
+    editAppointmentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const appointmentId = editAppointmentIdInput.value;
+        const newDate = editAppointmentDateInput.value;
+        const newTime = editAppointmentTimeSelect.value;
+        const newDuration = parseInt(editAppointmentDurationSelect.value);
+
+        if (!newDate || !newTime || !newDuration) {
+            alert('預約日期、時間和長度不能為空！');
+            return;
+        }
+
+        try {
+            await db.collection('appointments').doc(appointmentId).update({
+                date: newDate,
+                time: newTime,
+                duration: newDuration
+            });
+
+            alert('預約資料更新成功！');
+            editAppointmentModal.classList.remove('is-active');
+            loadUpcomingAppointments();
+        } catch (error) {
+            console.error("更新預約資料時發生錯誤: ", error);
+            alert("更新預約資料失敗，請檢查網路連線或重新整理。");
+        }
+    });
+
+    // 刪除預約
+    async function deleteAppointment(appointmentId) {
+        try {
+            await db.collection('appointments').doc(appointmentId).delete();
+            alert('預約已刪除！');
+            loadUpcomingAppointments();
+        } catch (error) {
+            console.error("刪除預約時發生錯誤: ", error);
+            alert("刪除預約失敗，請檢查網路連線或重新整理。");
+        }
+    }
+
+    // 關閉修改預約的彈出視窗
+    closeEditAppointmentModalBtn.addEventListener('click', () => {
+        editAppointmentModal.classList.remove('is-active');
+    });
+
+    // 初始載入
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        appointmentDateInput.value = today;
+        populateTimeOptions(appointmentTimeSelect);
+        populateTimeOptions(editAppointmentTimeSelect);
+        loadUpcomingAppointments();
+        fetchAllCustomers();
+    });
+    
+    // 搜尋與篩選事件
+    customerSearchInput.addEventListener('input', loadCustomers);
+    customerBirthdayFilter.addEventListener('change', loadCustomers);
+    customerTypeFilter.addEventListener('change', loadCustomers);
+</script>
+
+</body>
+</html>
