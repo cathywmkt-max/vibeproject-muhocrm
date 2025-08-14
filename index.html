@@ -191,9 +191,9 @@
         .details h4 {
             margin: 0 0 10px 0;
             color: #CA8E82; /* Details H4 顏色 */
-            font-size: 1rem;
             border-bottom: 1px solid #E3B4A2; /* Details H4 底線顏色 */
             padding-bottom: 5px;
+            font-size: 1rem;
         }
         .details p {
             margin: 5px 0;
@@ -524,6 +524,10 @@
                     <option value="120">120分鐘</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label for="edit-appointment-notes">備註</label>
+                <textarea id="edit-appointment-notes" placeholder="例如：特別需求、身體狀況等" rows="3"></textarea>
+            </div>
             <div class="modal-buttons">
                 <button type="button" class="btn cancel-btn" id="close-edit-appointment-modal">取消</button>
                 <button type="submit" class="btn">儲存</button>
@@ -582,8 +586,8 @@
     const editAppointmentDateInput = document.getElementById('edit-appointment-date');
     const editAppointmentTimeSelect = document.getElementById('edit-appointment-time');
     const editAppointmentDurationSelect = document.getElementById('edit-appointment-duration');
-    const closeEditAppointmentModalBtn = document.getElementById('close-edit-appointment-modal');
-
+    const editAppointmentNotesInput = document.getElementById('edit-appointment-notes'); // 新增
+    const closeEditAppointmentModalBtn = document.getElementById('close-edit-appointment-modal'); // 新增
 
     // 產生預約時間選項
     function populateTimeOptions(selectElement) {
@@ -768,7 +772,7 @@
                 const customerId = doc.id;
                 
                 const customerAppointments = allAppointments.filter(app => app.customerId === customerId).sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
-
+                
                 const appointmentCount = customerAppointments.length;
                 const isNewCustomer = appointmentCount <= 1;
 
@@ -989,6 +993,7 @@
                 populateTimeOptions(editAppointmentTimeSelect);
                 editAppointmentTimeSelect.value = app.time;
                 editAppointmentDurationSelect.value = app.duration;
+                editAppointmentNotesInput.value = app.notes || ''; // 新增：載入備註
                 editAppointmentModal.classList.add('is-active');
             }
         } catch (error) {
@@ -1004,6 +1009,7 @@
         const newDate = editAppointmentDateInput.value;
         const newTime = editAppointmentTimeSelect.value;
         const newDuration = parseInt(editAppointmentDurationSelect.value);
+        const newNotes = editAppointmentNotesInput.value.trim(); // 新增：取得備註
 
         if (!newDate || !newTime || !newDuration) {
             alert('預約日期、時間和長度不能為空！');
@@ -1014,7 +1020,8 @@
             await db.collection('appointments').doc(appointmentId).update({
                 date: newDate,
                 time: newTime,
-                duration: newDuration
+                duration: newDuration,
+                notes: newNotes // 新增：更新備註
             });
 
             alert('預約資料更新成功！');
@@ -1038,8 +1045,8 @@
         }
     }
 
-    // 關閉修改預約的彈出視窗
-    closeEditAppointmentModalBtn.addEventListener('click', () => {
+    // 關閉修改預約彈出視窗
+    closeEditAppointmentModalBtn.addEventListener('click', () => { // 新增
         editAppointmentModal.classList.remove('is-active');
     });
 
